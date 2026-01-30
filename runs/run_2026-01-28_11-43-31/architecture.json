@@ -1,0 +1,33 @@
+[
+  {
+    "type": "ConvolutionalLayer",
+    "output_channels": 16,
+    "input_channels": 1,
+    "kernel_size": 5
+  },
+  {
+    "type": "Tanh"
+  },
+  {
+    "type": "ConvolutionalLayer",
+    "output_channels": 8,
+    "input_channels": 16,
+    "kernel_size": 5
+  },
+  {
+    "type": "Tanh"
+  },
+  {
+    "type": "MaxPool",
+    "kernel_size": 2,
+    "stride": 2
+  },
+  {
+    "type": "ReshapeLayer"
+  },
+  {
+    "type": "Dense",
+    "output_size": 10,
+    "input_size": 800
+  }
+]

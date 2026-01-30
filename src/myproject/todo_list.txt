@@ -1,0 +1,21 @@
+STAGE 1
+
+-Pooling 
+
+STAGE 2
+
+-CIFAR10
+
+STAGE 3
+
+???
+
+
+plot(loss)
+
+
+-CHECK FLAWS
+
+-check stride / pooling ConvolutionalLayer
+
+update comment neuralnetwork

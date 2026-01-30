@@ -1,0 +1,15 @@
+[
+  {
+    "type": "Dense",
+    "output_size": 512,
+    "input_size": 784
+  },
+  {
+    "type": "Tanh"
+  },
+  {
+    "type": "Dense",
+    "output_size": 10,
+    "input_size": 512
+  }
+]

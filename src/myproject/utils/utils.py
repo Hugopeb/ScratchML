@@ -1,0 +1,71 @@
+import torch    
+from datetime import datetime
+
+def get_timestamp():
+    return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+def get_batches(data, targets, batch_size=64, shuffle=True):
+    """
+    Yields batches of data and targets.
+
+    Args:
+        data (torch.Tensor): Input data tensor of shape (N, ...).
+        targets (torch.Tensor): Target tensor of shape (N, ...).
+        batch_size (int): Batch size.
+        shuffle (bool): Shuffle before batching.
+
+    Yields:
+        Tuple[torch.Tensor, torch.Tensor]: Batch of (data, targets).
+    """
+
+    if not isinstance(data, torch.Tensor) or not isinstance(targets, torch.Tensor):
+        raise TypeError("data and targets must be torch tensors")
+
+    if data.shape[0] != targets.shape[0]:
+        raise ValueError("data and targets must have the same length")
+
+    if batch_size <= 0:
+        raise ValueError("batch_size must be a positive integer")
+
+    num_samples = data.shape[0]
+    indices = torch.arange(num_samples)
+
+    if shuffle:
+        indices = indices[torch.randperm(num_samples)]
+
+    for start in range(0, num_samples, batch_size):
+        batch_idx = indices[start:start + batch_size]
+
+        x_batch = data[batch_idx]
+        y_batch = targets[batch_idx]
+
+        yield x_batch, y_batch
+
+
+
+def ensure_conv_input(input):
+    '''
+    Ensure tensor has shape (batch_size, input_channels, height, width).
+    If input is (batch_size, height, width), add input channel dimension.
+
+    Args:
+        x: input tensor
+
+    Returns:
+        Tensor with shape (batch_size, channel_inputs, height, width)
+
+    Raises:
+        ValueError if input ndim is not 3 or 4.
+    '''
+    if input.ndim == 3:
+        return input.unsqueeze(1)
+    
+    if input.ndim == 4:
+        return input
+        
+    else:
+        raise ValueError(
+            f"Unexpected image shape. Expected image.ndim = 3 or 4 but got image.ndim = {input.ndim}"
+        )
+
+
