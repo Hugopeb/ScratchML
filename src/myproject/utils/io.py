@@ -26,7 +26,7 @@ class Logger:
             ├──  config.json
             └── metrics
                 ├──ConvolutionalLayers.png
-                └──params.jsonl
+                └──stats.jsonl
     '''
     def __init__(self):
         self.timestamp = get_timestamp()
@@ -82,16 +82,16 @@ class Logger:
 
         torch.save(state_dict, path)
 
-    def log_params(self, model, epoch):
+    def log_stats(self, model, epoch):
         '''
         Saves the mean, std, max and min values of the weights and the
-        bias for each layer at a given epoch as params.jsonl.
+        bias for each layer at a given epoch as stats.jsonl.
         '''
-        path = os.path.join(self.metrics_dir, "params.jsonl")
-        params = model.log_params(epoch)
+        path = os.path.join(self.metrics_dir, "stats.jsonl")
+        stats = model.stats(epoch)
 
         with open(path, "a") as f:
-            for state in params:
+            for state in stats:
                 f.write(json.dumps(state) + "\n")
 
 

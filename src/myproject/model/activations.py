@@ -1,9 +1,9 @@
 from torch.nn.functional import conv2d
 import torch
 
-from myproject.utils import ensure_conv_input
+from myproject.utils.utils import ensure_conv_input, Parameter
 
-class Dense():
+class Dense:
     """
     Fully connected layer (linear transformation).
 
@@ -16,25 +16,38 @@ class Dense():
     def __init__(self, output_size, input_size):
         self.input_size = input_size
         self.output_size = output_size
-        self.weights = torch.randn(output_size, input_size) * 0.01
-        self.bias = torch.randn(output_size) * 0.01
 
+        self.weights = Parameter(
+            torch.randn(output_size, input_size) * 0.01
+        )
+        self.bias = Parameter(
+            torch.randn(output_size) * 0.01
+        )
+
+    def parameters(self):
+        return [self.weights, self.bias]
     
     def forward(self, input):
         self.input = input
         self.batch_size = self.input.shape[0]
-        self.output = self.input @ self.weights.T + self.bias
+        self.output = self.input @ self.weights.data.T + self.bias.data
+
         return self.output
 
     def backwards(self, grad_output):
-        self.grad_weights = grad_output.T @ self.input / self.batch_size
-        self.grad_bias = grad_output.sum(dim=0)  / self.batch_size
-        self.grad_input = grad_output @ self.weights
+        '''
+        Computes the gradient of the loss function w.r.t weights, bias and input
+        of the Dense layer. The gradients w.r.t weights and the bias are stored
+        as attributes of self.weights and self.bias. 
+
+        The method returns the gradient of the loss function w.r.t input or the layer.
+        '''
+        self.weights.grad = grad_output.T @ self.input / self.batch_size
+        self.bias.grad = grad_output.sum(dim=0)  / self.batch_size
+
+        self.grad_input = grad_output @ self.weights.data
+
         return self.grad_input
-    
-    def update_parameters(self, lr):
-        self.weights -= lr * self.grad_weights
-        self.bias -= lr * self.grad_bias
 
     def get_config(self):
         return {
@@ -45,33 +58,38 @@ class Dense():
     
     def state_dict(self):
         return {
-            "weights": self.weights,
-            "bias": self.bias
+            "weights": self.weights.data,
+            "bias": self.bias.data
         }
     
     def load_state_dict(self, state):
-        self.weights = state["weights"]
-        self.bias = state["bias"]
+        self.weights.data = state["weights"]
+        self.bias.data = state["bias"]
 
 
-    def compute_params(self):
-        weights_params = {
-            "mean": self.weights.mean().item(),
-            "std": self.weights.std().item(),
-            "max": self.weights.max().item(),
-            "min": self.weights.min().item()
+    def stats(self):
+        '''
+        Returns a list with two dictionaries, one for the weights
+        and one for the bias. They both contain the mean, std, max
+        and min values of these parameters 
+        '''
+        weights_stats = {
+            "mean": self.weights.data.mean().item(),
+            "std": self.weights.data.std().item(),
+            "max": self.weights.data.max().item(),
+            "min": self.weights.data.min().item()
         }
 
-        bias_params = {
-            "mean": self.bias.mean().item(),
-            "std": self.bias.std().item(),
-            "max": self.bias.max().item(),
-            "min": self.bias.min().item()
+        bias_stats = {
+            "mean": self.bias.data.mean().item(),
+            "std": self.bias.data.std().item(),
+            "max": self.bias.data.max().item(),
+            "min": self.bias.data.min().item()
         }
 
-        return weights_params, bias_params
+        return weights_stats, bias_stats
 
-class ReLU():
+class ReLU:
     """
     Rectified Linear Unit activation function.
 
@@ -94,7 +112,7 @@ class ReLU():
         }
 
 
-class Tanh():
+class Tanh:
     """
     Hyperbolic tangent activation function.
 
@@ -118,15 +136,23 @@ class Tanh():
         }
     
 
-class ConvolutionalLayer():
+class ConvolutionalLayer:
     def __init__(self, output_channels, input_channels, kernel_size, stride = 1, padding = 0):
         self.stride = stride
         self.padding = padding
         self.input_channels = input_channels
         self.output_channels = output_channels
         self.kernel_size = kernel_size
-        self.weights = torch.randn(self.output_channels, self.input_channels, self.kernel_size, self.kernel_size) 
-        self.bias = torch.randn(self.output_channels) 
+
+        self.weights = Parameter(
+            torch.randn(self.output_channels, self.input_channels, self.kernel_size, self.kernel_size)
+        ) 
+        self.bias = Parameter(
+            torch.randn(self.output_channels)
+        ) 
+
+    def parameters(self):
+        return [self.weights, self.bias]
 
     def forward(self, input): 
         """
@@ -145,8 +171,8 @@ class ConvolutionalLayer():
 
         self.output = conv2d(
             self.input,
-            self.weights,
-            self.bias,
+            self.weights.data,
+            self.bias.data,
             self.stride,
             self.padding
         )
@@ -168,12 +194,12 @@ class ConvolutionalLayer():
         - Weight gradient computed using convolution between input and grad_output.
         - Input gradient computed using flipped weights (standard conv backprop).
         """
-        self.grad_bias = grad_output.sum(dim = (0, 2, 3))
+        self.bias.grad = grad_output.sum(dim = (0, 2, 3))
 
         input_permuted = self.input.permute(1,0,2,3)
         grad_output_permuted = grad_output.permute(1,0,2,3)
 
-        self.grad_weights = conv2d(
+        self.weights.grad = conv2d(
             input_permuted,
             grad_output_permuted
         ).permute(1,0,2,3)
@@ -195,7 +221,7 @@ class ConvolutionalLayer():
                 )
         '''
 
-        weights_flipped = self.weights.flip(dims = [-1, -2]).permute(1,0,2,3)
+        weights_flipped = self.weights.data.flip(dims = [-1, -2]).permute(1,0,2,3)
         
         self.grad_input = conv2d(
             grad_output,
@@ -218,11 +244,6 @@ class ConvolutionalLayer():
         '''
         return self.grad_input
 
-    
-    def update_parameters(self, lr):
-        self.weights -= lr * self.grad_weights
-        self.bias -= lr * self.grad_bias 
-
     def get_config(self):
         return {
             "type": "ConvolutionalLayer",
@@ -233,36 +254,36 @@ class ConvolutionalLayer():
     
     def state_dict(self):
         return {
-            "weights": self.weights,
-            "bias": self.bias
+            "weights": self.weights.data,
+            "bias": self.bias.data
         }
         
     def load_state_dict(self, state):
-        self.weights = state["weights"]
-        self.bias = state["bias"]
+        self.weights.data = state["weights"]
+        self.bias.data = state["bias"]
 
     
-    def compute_params(self):
+    def stats(self):
         '''
         Returns a list of dictionaries with the mean, std, max and min
         values of the weights and bias of the layer. .item() assures 
         values are JSONserializable.
         '''
-        weights_params = {
-            "mean": self.weights.mean().item(),
-            "std": self.weights.std().item(),
-            "max": self.weights.max().item(),
-            "min": self.weights.min().item()
+        weights_stats = {
+            "mean": self.weights.data.mean().item(),
+            "std": self.weights.data.std().item(),
+            "max": self.weights.data.max().item(),
+            "min": self.weights.data.min().item()
         }
 
-        bias_params = {
-            "mean": self.bias.mean().item(),
-            "std": self.bias.std().item(),
-            "max": self.bias.max().item(),
-            "min": self.bias.min().item()
+        bias_stats = {
+            "mean": self.bias.data.mean().item(),
+            "std": self.bias.data.std().item(),
+            "max": self.bias.data.max().item(),
+            "min": self.bias.data.min().item()
         }
 
-        return weights_params, bias_params
+        return weights_stats, bias_stats
 
 
 class ReshapeLayer:
@@ -365,13 +386,6 @@ class MaxPool:
 
         return grad_input
     
-    def get_config(self):
-        return {
-            "kernel_size": self.kernel_size,
-            "stride": self.stride
-        }
-
-
     def get_config(self):
         return {
             "type": "MaxPool",

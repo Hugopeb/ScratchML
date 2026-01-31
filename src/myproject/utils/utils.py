@@ -68,4 +68,8 @@ def ensure_conv_input(input):
             f"Unexpected image shape. Expected image.ndim = 3 or 4 but got image.ndim = {input.ndim}"
         )
 
-
+class Parameter:
+    def __init__(self, data):
+        self.data = data
+        self.grad = None
+        

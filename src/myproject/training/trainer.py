@@ -1,6 +1,6 @@
-from myproject.utils.utils import get_batches
 import time
 import torch
+from myproject.utils.utils import get_batches
 
 class Trainer:
     """
@@ -12,13 +12,12 @@ class Trainer:
     - Tracking timing and aggregate metrics per epoch
     - Coordinating logging and model artifact persistence
     """
-
     def __init__(self, model, logger, loss_fn):
         self.model = model
         self.logger = logger
         self.loss_fn = loss_fn
 
-    def train_epoch(self, train_data, train_targets, batch_size, lr):
+    def train_epoch(self, optimizer, train_data, train_targets, batch_size, lr):
         """
         Run one full training epoch over the training dataset.
 
@@ -43,7 +42,7 @@ class Trainer:
             avg_batch_CE = self.loss_fn.forward(output, y_batch)
             grad_input = self.loss_fn.backwards(y_batch)
             self.model.backwards(grad_input)
-            self.model.update_parameters(lr = lr)
+            optimizer.optim(self.model.parameters(), lr = lr)
             total_epoch_CE += avg_batch_CE
 
             batch_index += 1
@@ -88,7 +87,7 @@ class Trainer:
         return accuracy, eval_time
 
 
-    def train_model(self, train_data, train_targets, eval_data, eval_targets, num_epochs, batch_size = 64, lr = 0.01, eval = True):
+    def train_model(self, optimizer, train_data, train_targets, eval_data, eval_targets, num_epochs, batch_size = 64, lr = 0.01, eval = True):
         """
         Training loop coordinating training, evaluation, and logging.
 
@@ -105,6 +104,7 @@ class Trainer:
         """
         for epoch in range(num_epochs):
             avg_epoch_CE, train_time = self.train_epoch(
+                optimizer = optimizer,
                 train_data = train_data,
                 train_targets = train_targets,
                 batch_size = batch_size,
@@ -130,9 +130,9 @@ class Trainer:
             print(train_metrics)
 
             self.logger.log_train_metrics(train_metrics)
-            self.logger.log_params(self.model, epoch)
+            self.logger.log_stats(self.model, epoch)
 
-        print("Logging...")
+        print(f"Logging in {self.logger.run_dir}")
         self.logger.log_model(self.model)
         self.logger.log_conv_filters(self.model)
         self.logger.log_architecture(self.model)

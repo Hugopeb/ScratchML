@@ -20,7 +20,7 @@ class NeuralNetwork():
         get_architecture(): Returns a list of layer configuration dictionaries.
         state_dict(): Returns a dictionary of layer weights and bias
         load_state_dict(state): Loads a set of weight and bias previously trained
-        log_params(epoch): Returns a list of layer weights/bias params: mean, std, max, min
+        stats(epoch): Returns a list of layer weights/bias stats: mean, std, max, min
     """
     def __init__(self, architecture = []):
         self.layers = []
@@ -28,7 +28,17 @@ class NeuralNetwork():
             self.layers.append(layer)
 
     def __call__(self, input):
-        return self.forward(input)        
+        return self.forward(input)     
+
+    def parameters(self):
+        parameters = []
+        for layer in self.layers:
+            if hasattr(layer, "parameters"):
+                parameters += layer.parameters()
+            else:
+                pass
+
+        return parameters
 
     def forward(self, input):
         output = input
@@ -39,13 +49,6 @@ class NeuralNetwork():
     def backwards(self, grad_input):
         for layer in list(reversed(self.layers)):
             grad_input = layer.backwards(grad_input)
-
-    def update_parameters(self, lr = 0.01):
-        for layer in self.layers:
-            try:
-                layer.update_parameters(lr)
-            except AttributeError:
-                pass
 
     def get_architecture(self):
         return [layer.get_config() for layer in self.layers]
@@ -66,21 +69,21 @@ class NeuralNetwork():
                 layer.load_state_dict(state[key])
 
     
-    def log_params(self, epoch):
-        params = []
+    def stats(self, epoch):
+        stats = []
         for i, layer in enumerate(self.layers):
             try:
-                params.append({
+                stats.append({
                     "epoch": epoch,
                     f"layer": f"{type(layer).__name__}_{i}",
-                    "weights": layer.compute_params()[0],
-                    "bias": layer.compute_params()[1]
+                    "weights": layer.stats()[0],
+                    "bias": layer.stats()[1]
                 })
 
             except AttributeError:
                 pass
         
-        return params
+        return stats
     
     def get_conv_layers(self):
         '''
@@ -108,7 +111,7 @@ class NeuralNetwork():
         state = {}
         for i, layer in enumerate(self.layers):
             if isinstance(layer, ConvolutionalLayer):
-                state[f"ConvolutionalLayer_{i}"] = layer.weights.mean(dim = 1, keepdim = True)
+                state[f"ConvolutionalLayer_{i}"] = layer.weights.data.mean(dim = 1, keepdim = True)
 
             else:
                 pass
