@@ -21,7 +21,7 @@ class Dense:
             torch.randn(output_size, input_size) * 0.01
         )
         self.bias = Parameter(
-            torch.randn(output_size) * 0.01
+            torch.zeros(output_size) 
         )
 
     def parameters(self):
@@ -145,10 +145,10 @@ class ConvolutionalLayer:
         self.kernel_size = kernel_size
 
         self.weights = Parameter(
-            torch.randn(self.output_channels, self.input_channels, self.kernel_size, self.kernel_size)
+            torch.randn(self.output_channels, self.input_channels, self.kernel_size, self.kernel_size) 
         ) 
         self.bias = Parameter(
-            torch.randn(self.output_channels)
+            torch.zeros(self.output_channels)
         ) 
 
     def parameters(self):

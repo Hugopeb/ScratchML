@@ -56,16 +56,22 @@ class Logger:
         with open(path, "w") as f:
             json.dump(architecture, f, indent=2)
 
-    def log_config(self, num_epochs, batch_size, lr):
+    def log_config(self, num_epochs, batch_size, optimizer):
         '''
         Saves the run configuration: num_epochs, batch_size
         and learning_rate, (possible random seed in future)
         '''
+        opt_config = optimizer.get_config()
+
         config = {
             "num_epochs": num_epochs,
             "batch_size": batch_size,
-            "learning_rate": lr
+            "learning_rate": opt_config["lr"],
+            "optimizer": opt_config["type"],
         }
+
+        if "momentum" in opt_config:
+            config["momentum"] = opt_config["momentum"]
 
         path = os.path.join(self.run_dir, "config.json")
 

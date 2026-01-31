@@ -2,7 +2,7 @@ from myproject.model.activations import Dense, ReLU, Tanh, ConvolutionalLayer, M
 from myproject.loss.loss_functions import CrossEntropy
 from myproject.model.neural_network import NeuralNetwork
 from myproject.data_scripts.data_preprocessing import process_MNIST, process_CIFAR10
-from myproject.optimizer.optimizer import SGD
+from myproject.optimizer.optimizer import SGD, SGDWithMomentum
 from myproject.model.activations import ReshapeLayer
 from myproject.training.trainer import Trainer
 from myproject.utils.io import Logger
@@ -27,14 +27,15 @@ trainer = Trainer(
     loss_fn = CrossEntropy(),
 )
 
+optimizer = SGDWithMomentum(model.parameters(), lr = 0.01, momentum = 0.6)
+
 trainer.train_model(
-    optimizer = SGD(),
+    optimizer = optimizer,
     train_data = train_images,
     train_targets = train_targets,
     eval_data = test_images,
     eval_targets = test_targets,
-    num_epochs = 10,
+    num_epochs = 6,
     batch_size = 64,
-    lr = 0.01,
     eval=True
 )

@@ -6,7 +6,7 @@ from myproject.data_scripts.data_preprocessing import process_MNIST
 
 train_images, train_targets, test_images, test_targets = process_MNIST(ConvolutionalLayer=True)
 
-model = build_NeuralNetwork("run_2026-01-28_11-39-38")
+model = build_NeuralNetwork("run_2026-01-28_12-02-23")
 
 trainer = Trainer(
     model = model,
