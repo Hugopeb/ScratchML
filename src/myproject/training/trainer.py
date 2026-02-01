@@ -12,10 +12,11 @@ class Trainer:
     - Tracking timing and aggregate metrics per epoch
     - Coordinating logging and model artifact persistence
     """
-    def __init__(self, model, logger, loss_fn):
+    def __init__(self, model, loss_fn, logger, scheduler):
         self.model = model
         self.logger = logger
         self.loss_fn = loss_fn
+        self.scheduler = scheduler
 
     def train_epoch(self, optimizer, train_data, train_targets, batch_size):
         """
@@ -52,6 +53,8 @@ class Trainer:
         end = time.perf_counter()
         train_time = end - start
         avg_epoch_CE = total_epoch_CE / num_batches
+
+        self.scheduler.step(avg_epoch_CE)
         
         return avg_epoch_CE, train_time
     
