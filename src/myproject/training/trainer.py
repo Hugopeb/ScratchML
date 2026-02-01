@@ -1,6 +1,7 @@
 import time
 import torch
-from myproject.utils.utils import get_batches
+from myproject.utils.utils import get_batches, random_crop_and_flip
+
 
 class Trainer:
     """
@@ -39,6 +40,7 @@ class Trainer:
 
 
         for x_batch, y_batch in get_batches(train_data, train_targets, batch_size = batch_size):
+            x_batch = random_crop_and_flip(x_batch)
             output = self.model.forward(x_batch)
             avg_batch_CE = self.loss_fn.forward(output, y_batch)
             grad_input = self.loss_fn.backwards(y_batch)

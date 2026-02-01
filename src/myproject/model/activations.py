@@ -88,7 +88,14 @@ class Dense:
         }
 
         return weights_stats, bias_stats
+    
+    def to(self, device):
+        self.weights.data = self.weights.data.to(device)
+        self.bias.data = self.bias.data.to(device)
 
+        return self
+    
+    
 class ReLU:
     """
     Rectified Linear Unit activation function.
@@ -226,7 +233,7 @@ class ConvolutionalLayer:
         self.grad_input = conv2d(
             grad_output,
             weights_flipped,
-            padding = self.kernel_size - 1
+            padding = self.kernel_size - 1 - self.padding
         )
 
         '''
@@ -284,6 +291,12 @@ class ConvolutionalLayer:
         }
 
         return weights_stats, bias_stats
+    
+    def to(self, device):
+        self.weights.data = self.weights.data.to(device)
+        self.bias.data = self.bias.data.to(device)
+
+        return self
 
 
 class ReshapeLayer:
@@ -369,7 +382,7 @@ class MaxPool:
         out_h, out_w = grad_output.shape[2:]
 
         # Initialize gradient wrt input with zeros
-        grad_input = torch.zeros((N, C, H, W))
+        grad_input = torch.zeros((N, C, H, W), device = grad_output.device)
 
         # Unfold grad_input to match forward window structure
         grad_input_unfold = grad_input.unfold(2, k, s).unfold(3, k, s)

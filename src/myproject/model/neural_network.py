@@ -113,7 +113,11 @@ class NeuralNetwork():
             if isinstance(layer, ConvolutionalLayer):
                 state[f"ConvolutionalLayer_{i}"] = layer.weights.data.mean(dim = 1, keepdim = True)
 
-            else:
-                pass
-
         return state
+    
+    def to(self, device):
+        for layer in self.layers:
+            if hasattr(layer, "to"):
+                layer.to(device)
+
+        return self

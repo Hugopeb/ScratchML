@@ -31,12 +31,12 @@ class CrossEntropy():
     - Uses `torch.log_softmax` for numerical stability.
     - Gradient is returned as a tensor of shape (batch_size, number_of_classes).
     """
-    def forward(self, logits, output):
-        self.output = output
-        self.batch_size = output.shape[0]
+    def forward(self, logits, y_true):
+        self.y_true = y_true
+        self.batch_size = y_true.shape[0]
         self.log_probs = torch.log_softmax(logits, dim = 1)
 
-        avg_batch_CE = -self.log_probs[torch.arange(self.batch_size), self.output].mean()
+        avg_batch_CE = -self.log_probs[torch.arange(self.batch_size), self.y_true].mean()
         return avg_batch_CE
     
     def backwards(self, output):

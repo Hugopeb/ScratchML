@@ -1,7 +1,7 @@
 import torch
 from myproject.data_scripts.load_data import load_MNIST, load_CIFAR10
 
-def process_MNIST(ConvolutionalLayer=False):
+def process_MNIST(device, ConvolutionalLayer=True):
     """
     Load and preprocess the MNIST dataset for training.
 
@@ -33,11 +33,11 @@ def process_MNIST(ConvolutionalLayer=False):
 
     train_data, test_data = load_MNIST()
 
-    train_images = train_data.data / 255.0
-    test_images = test_data.data / 255.0
+    train_images = train_data.data.to(device) / 255.0
+    test_images = test_data.data.to(device) / 255.0
 
-    train_targets = train_data.targets 
-    test_targets = test_data.targets 
+    train_targets = train_data.targets.to(device)
+    test_targets  = test_data.targets.to(device)
 
     if not ConvolutionalLayer:
         train_images = train_images.reshape(-1, 28*28)
@@ -46,7 +46,7 @@ def process_MNIST(ConvolutionalLayer=False):
     return train_images, train_targets, test_images, test_targets
 
 
-def process_CIFAR10(ConvolutionalLayer=True):
+def process_CIFAR10(device):
     """
     This project does not yet efficiently handle the CIFAR-10 dataset.
     Nonetheless, it is still possible to load the dataset using this
@@ -68,17 +68,25 @@ def process_CIFAR10(ConvolutionalLayer=True):
 
     train_data, test_data = load_CIFAR10()
 
-    train_images = torch.tensor(train_data.data, dtype=torch.float32) / 255.0
-    train_images = train_images.permute(0, 3, 1, 2)
+    train_images = (
+        torch.tensor(train_data.data, dtype=torch.float32)
+        .permute(0, 3, 1, 2)
+        .to(device) / 255
+    )
 
-    test_images = torch.tensor(test_data.data, dtype=torch.float32) / 255.0
-    test_images = test_images.permute(0, 3, 1, 2)
+    test_images = (
+        torch.tensor(test_data.data, dtype=torch.float32)
+        .permute(0, 3, 1, 2)
+        .to(device) / 255.0
+    )
 
-    train_targets = torch.tensor(train_data.targets, dtype=torch.long)
-    test_targets = torch.tensor(test_data.targets, dtype=torch.long)
+    mean = torch.tensor([0.4914, 0.4822, 0.4465], device=device).view(1, 3, 1, 1)
+    std  = torch.tensor([0.2470, 0.2435, 0.2616], device=device).view(1, 3, 1, 1)
 
-    if not ConvolutionalLayer:
-        train_images = train_images.reshape(train_images.size(0), -1)
-        test_images = test_images.reshape(test_images.size(0), -1)
+    train_images = (train_images - mean) / std
+    test_images  = (test_images  - mean) / std
+
+    train_targets = torch.tensor(train_data.targets, dtype=torch.long).to(device)
+    test_targets  = torch.tensor(test_data.targets, dtype=torch.long).to(device)
 
     return train_images, train_targets, test_images, test_targets

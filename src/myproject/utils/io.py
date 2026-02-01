@@ -125,7 +125,7 @@ class Logger:
             grid = make_grid(filters, nrow=4, normalize=True, padding=1)
 
             plt.figure(figsize=(6, 6))
-            plt.imshow(grid.permute(1, 2, 0))
+            plt.imshow(grid.detach().cpu().permute(1, 2, 0).numpy())
             plt.axis("off")
             plt.title(key)
             plt.savefig(os.path.join(self.metrics_dir, f"{key}.png"))
