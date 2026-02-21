@@ -93,15 +93,15 @@ It **is** intended to:
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/Hugopeb/ScratchML.git
-cd ScratchML
+git clone https://github.com/Hugopeb/torchLab.git
+cd torchLab
 ```
 
 2. **Create a virtual environment**
 
 ```bash
-python3 -m venv ScratchML_VENV
-source ScratchML_VENV/bin/activate
+python3 -m venv torchLab_VENV
+source torchLab_VENV/bin/activate
 ```
 
 3. **Install required packages**
